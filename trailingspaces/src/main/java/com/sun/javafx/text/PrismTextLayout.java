@@ -22,7 +22,10 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.example.demo;
+
+package com.sun.javafx.text;
+
+
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.PathElement;
@@ -105,6 +108,7 @@ public class PrismTextLayout implements TextLayout {
      *                                                                         *
      **************************************************************************/
 
+    @Override
     public boolean setContent(TextSpan[] spans) {
         if (spans == null && this.spans == null) return false;
         if (spans != null && this.spans != null) {
@@ -127,6 +131,7 @@ public class PrismTextLayout implements TextLayout {
         return true;
     }
 
+    @Override
     public boolean setContent(String text, Object font) {
         reset();
         this.spans = null;
@@ -142,6 +147,7 @@ public class PrismTextLayout implements TextLayout {
         return true;
     }
 
+    @Override
     public boolean setDirection(int direction) {
         if ((flags & DIRECTION_MASK) == direction) return false;
         flags &= ~DIRECTION_MASK;
@@ -150,6 +156,7 @@ public class PrismTextLayout implements TextLayout {
         return true;
     }
 
+    @Override
     public boolean setBoundsType(int type) {
         if ((flags & BOUNDS_MASK) == type) return false;
         flags &= ~BOUNDS_MASK;
@@ -158,6 +165,7 @@ public class PrismTextLayout implements TextLayout {
         return true;
     }
 
+    @Override
     public boolean setAlignment(int alignment) {
         int align = ALIGN_LEFT;
         switch (alignment) {
@@ -176,6 +184,7 @@ public class PrismTextLayout implements TextLayout {
         return true;
     }
 
+    @Override
     public boolean setWrapWidth(float newWidth) {
         if (Float.isInfinite(newWidth)) newWidth = 0;
         if (Float.isNaN(newWidth)) newWidth = 0;
@@ -207,6 +216,7 @@ public class PrismTextLayout implements TextLayout {
         return needsLayout;
     }
 
+    @Override
     public boolean setLineSpacing(float spacing) {
         if (this.spacing == spacing) return false;
         this.spacing = spacing;
@@ -220,11 +230,13 @@ public class PrismTextLayout implements TextLayout {
         }
     }
 
+    @Override
     public com.sun.javafx.scene.text.TextLine[] getLines() {
         ensureLayout();
         return lines;
     }
 
+    @Override
     public GlyphList[] getRuns() {
         ensureLayout();
         GlyphList[] result = new GlyphList[runCount];
@@ -238,11 +250,13 @@ public class PrismTextLayout implements TextLayout {
         return result;
     }
 
+    @Override
     public BaseBounds getBounds() {
         ensureLayout();
         return logicalBounds;
     }
 
+    @Override
     public BaseBounds getBounds(TextSpan filter, BaseBounds bounds) {
         ensureLayout();
         float left = Float.POSITIVE_INFINITY;
@@ -295,6 +309,7 @@ public class PrismTextLayout implements TextLayout {
         return bounds.deriveWithNewBounds(left, top, 0, right, bottom, 0);
     }
 
+    @Override
     public PathElement[] getCaretShape(int offset, boolean isLeading,
                                        float x, float y) {
         ensureLayout();
@@ -403,6 +418,7 @@ public class PrismTextLayout implements TextLayout {
         return result;
     }
 
+    @Override
     public Hit getHitInfo(float x, float y) {
         int charIndex = -1;
         boolean leading = false;
@@ -442,6 +458,7 @@ public class PrismTextLayout implements TextLayout {
         return new Hit(charIndex, -1, leading);
     }
 
+    @Override
     public PathElement[] getRange(int start, int end, int type,
                                   float x, float y) {
         ensureLayout();
@@ -571,6 +588,7 @@ public class PrismTextLayout implements TextLayout {
         return result.toArray(new PathElement[result.size()]);
     }
 
+    @Override
     public Shape getShape(int type, TextSpan filter) {
         ensureLayout();
         boolean text = (type & TYPE_TEXT) != 0;
@@ -893,51 +911,55 @@ public class PrismTextLayout implements TextLayout {
             leading = Math.max(leading, run.getLeading());
             length += run.getLength();
         }
+
+
         /*
          * Subtract the width of trailing spaces for the new TextLine so they're not taken into account
          * for alignment calculations:
          */
 
         width -= computeTrailingSpaceWidth(startOffset, length, lineRuns);
-        System.out.println("computeTrailingSpaceWidth");
+
         if (width > layoutWidth) layoutWidth = width;
         return new TextLine(startOffset, length, lineRuns,
                             width, ascent, descent, leading);
     }
+
     private float computeTrailingSpaceWidth(int startOffset, int length, TextRun[] lineRuns) {
-        char[] chars = getText();
-        int trailingSpaces = 0;
+      char[] chars = getText();
+      int trailingSpaces = 0;
 
-        for (int i = length + startOffset - 1; i >= startOffset; i--) {
-            if (chars[i] != ' ') { break;
-            }
-
-            trailingSpaces++;
+      for(int i = length + startOffset - 1; i >= startOffset; i--) {
+        if(chars[i] != ' ') {
+          break;
         }
 
-        float trailingSpaceWidth = 0;
+        trailingSpaces++;
+      }
 
-        if (trailingSpaces > 0) {
-            int lineRunCount = lineRuns.length;
+      float trailingSpaceWidth = 0;
 
-            for (int j = 0; j < lineRunCount; j++) {
-                TextRun textRun = lineRuns[j];
-                int runStart = textRun.getStart();
-                int runEnd = textRun.getEnd();
+      if(trailingSpaces > 0) {
+        int lineRunCount = lineRuns.length;
 
-                for (int k = runStart; k < runEnd; k++) {
-                    if (chars[k] == ' ') {
-                        trailingSpaceWidth += textRun.positions[k - runStart];
+        for(int j = 0; j < lineRunCount; j++) {
+          TextRun textRun = lineRuns[j];
+          int runStart = textRun.getStart();
+          int runEnd = textRun.getEnd();
 
-                        if (--trailingSpaces == 0) {
-                            return trailingSpaceWidth;
-                        }
-                    }
-                }
+          for(int k = runStart; k < runEnd; k++) {
+            if(chars[k] == ' ') {
+              trailingSpaceWidth += textRun.positions[k - runStart];
+
+              if(--trailingSpaces == 0) {
+                return trailingSpaceWidth;
+              }
             }
+          }
         }
+      }
 
-        return trailingSpaceWidth;
+      return trailingSpaceWidth;
     }
 
     private void reorderLine(TextLine line) {
@@ -1118,13 +1140,8 @@ public class PrismTextLayout implements TextLayout {
                  */
                 int offset = hitOffset;
                 int runEnd = run.getEnd();
-                // Don't take spaces into account at the preferred wrap index:
                 while (offset + 1 < runEnd && chars[offset] == ' ') {
                     offset++;
-                    /* Preserve behaviour: only keep one white space in the line
-                     * before wrapping. Needed API to allow change.
-                     */
-                    //break;
                 }
 
                 /* Find the break opportunity */
